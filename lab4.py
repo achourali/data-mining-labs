@@ -17,15 +17,15 @@ def visualize():
     plt.show()
 
 
-def kmeans(n_clusters=4):
+def kmeans(n_clusters=4):       
     fromage = pd.read_table(r"./fromage1.txt", sep="\t", header=0, index_col=0)
     np.random.seed(0)
     kmeans = cluster.KMeans(n_clusters=n_clusters)
     kmeans.fit(fromage)
     idk = np.argsort(kmeans.labels_)
-    # print(pd.DataFrame(fromage.index[idk],kmeans.labels_[idk]))
-    # print(kmeans.transform(fromage))
-    # print(kmeans.transform(fromage.iloc[idk]))
+    print(pd.DataFrame(fromage.index[idk], kmeans.labels_[idk]))
+    print(kmeans.transform(fromage))
+    print(kmeans.transform(fromage.iloc[idk]))
     return kmeans
 
 
@@ -53,23 +53,52 @@ def agglomerative_hierarchical_clustering():
     plt.title('AHC avec matérialisation des 4 classes')
     dendrogram(Z, labels=fromage.index,
                orientation='left', color_threshold=255)
-
+    print(Z)
     plt.show()
-    groupes_ahc = fcluster(Z, t=255, criterion='distance')
-    print(groupes_ahc)
-    ordered_groups_indexes = np.argsort(groupes_ahc)
+    ahc_groupes = fcluster(Z, t=255, criterion='distance')
+    print(ahc_groupes)
+    ordered_groups_indexes = np.argsort(ahc_groupes)
     print(pd.DataFrame(
-        fromage.index[ordered_groups_indexes], groupes_ahc[ordered_groups_indexes]))
+        fromage.index[ordered_groups_indexes], ahc_groupes[ordered_groups_indexes]))
 
 
-def PCA_plot():
-    km = kmeans(3)
+
+def PCA_plots():
+
     fromage = pd.read_table(r"./fromage1.txt", sep="\t", header=0, index_col=0)
     pca = PCA(n_components=2).fit_transform(fromage)
+    
+
+    # kmeans PCA plot
+    np.random.seed(0)
+    kmeans = cluster.KMeans(n_clusters=4)
+    kmeans.fit(fromage)
+    fig = plt.figure(figsize=(8, 8))
+    kmeans_PCA_plt = fig.add_subplot(1, 1, 1)
+    kmeans_PCA_plt.set_title('PCA kmeans', fontsize=20)
     for couleur, k in zip(['red', 'blue', 'lawngreen', 'aqua'], [0, 1, 2, 3]):
-        plt.scatter(pca[km.labels_ == k, 0],
-                    pca[km.labels_ == k, 1], c=couleur)
+        kmeans_PCA_plt.scatter(pca[kmeans.labels_ == k, 0],
+                               pca[kmeans.labels_ == k, 1], c=couleur)
+
+
+    #AHC PCA plot
+    
+    Z = linkage(fromage, method='ward', metric='euclidean')
+    AHC_groupes = fcluster(Z, t=255, criterion='distance')
+    fig = plt.figure(figsize=(8, 8))
+    AHC_PCA_plt = fig.add_subplot(1, 1, 1)
+    AHC_PCA_plt.set_title('PCA AHC', fontsize=20)
+    
+    for couleur, k in zip(['red', 'blue', 'lawngreen', 'aqua'], [1,2,3,4]):
+        AHC_PCA_plt.scatter(pca[AHC_groupes== k, 0],
+                               pca[AHC_groupes == k, 1], c=couleur)
+
+
+    
+    
     plt.show()
 
 
-PCA_plot()
+# PCA_plots()
+agglomerative_hierarchical_clustering()
+
